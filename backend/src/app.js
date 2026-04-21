@@ -1,20 +1,20 @@
 import express from "express";
 import cors from "cors";
+import imageRoutes from "./routes/imageRoutes.js";
+import sessionRoutes from "./routes/sessionRoutes.js";
+import guessRoutes from "./routes/guessRoutes.js";
 
 const app = express();
 
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
 app.get("/api/health", (req, res) => {
-  res.send("Server up and healthy.");
+  res.json({ message: "Server up and healthy." });
 });
 
-app.post("/api/click", (req, res) => {
-  const { x, y } = req.body;
-
-  console.log("Clicked at:", x, y);
-  res.json({ message: "Coordinates received", x, y });
-});
+app.use("/api/images", imageRoutes);
+app.use("/api/sessions", sessionRoutes);
+app.use("/api/guesses", guessRoutes);
 
 export default app;

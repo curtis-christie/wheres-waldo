@@ -1,58 +1,79 @@
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
+import Navbar from "../components/Navbar.jsx";
 import waldoImg1 from "../assets/waldo1.jpg";
 import waldoImg2 from "../assets/waldo2.jpg";
 import waldoImg3 from "../assets/waldo3.jpg";
-import Navbar from "../components/Navbar.jsx";
+import { fetchImage, createSession } from "../services/api.js";
 
-const imageMap = {
-  waldo1: {
-    title: "Find Waldo 1",
-    src: waldoImg1,
-  },
-  waldo2: {
-    title: "Find Waldo 2",
-    src: waldoImg2,
-  },
-  waldo3: {
-    title: "Find Wilma 3",
-    src: waldoImg3,
-  },
+const localImageMap = {
+  waldo1: waldoImg1,
+  waldo2: waldoImg2,
+  waldo3: waldoImg3,
 };
 
 export default function ImagePage() {
   const { imageId } = useParams();
-  const imageData = imageMap[imageId];
+  const [imageData, setImageData] = useState(null);
+  const [session, setSession] = useState(null);
 
-  if (!imageData) {
-    return <h2>Image not found</h2>;
-  }
+  useEffect(() => {
+    async function loadGame() {
+      const image = await fetchImage(imageId);
+      setImageData(image);
 
-  async function handleImageClick(e) {
-    const x = e.nativeEvent.offsetX;
-    const y = e.nativeEvent.offsetY;
+      const newSession = await createSession(image.id);
+      setSession(newSession);
+    }
 
-    const response = await fetch("http://localhost:3000/api/click", {
+    loadGame().catch(console.error);
+  }, [imageId]);
+
+  async function handleImageClick(event) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+
+    const response = await fetch("http://localhost:3000/api/guesses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ imageId, x, y }),
+      body: JSON.stringify({
+        sessionId: session.id,
+        x,
+        y,
+      }),
     });
 
     const data = await response.json();
     console.log(data);
   }
 
+  if (!imageData || !session) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="flex items-center justify-center flex-col gap-4">
       <Navbar />
       <h1 className="text-center">{imageData.title}</h1>
+
       <img
-        src={imageData.src}
+        src={localImageMap[imageData.slug]}
         alt={imageData.title}
         onClick={handleImageClick}
         style={{ width: "800px", cursor: "crosshair" }}
       />
+
+      <div>
+        <h2>Characters to find</h2>
+        <ul>
+          {imageData.characters.map((character) => (
+            <li key={character.id}>{character.name}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
