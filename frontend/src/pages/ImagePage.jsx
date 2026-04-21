@@ -39,6 +39,8 @@ export default function ImagePage() {
   }, [imageId]);
 
   async function handleImageClick(event) {
+    if (!session || gameComplete) return;
+
     const rect = event.currentTarget.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width;
     const y = (event.clientY - rect.top) / rect.height;
@@ -63,12 +65,18 @@ export default function ImagePage() {
     }
   }
 
-  if (!imageData || !session) {
-    return <div>Loading...</div>;
-  }
-
   if (error) {
     return <div>{error}</div>;
+  }
+
+  const imageSrc = localImageMap[imageData.slug];
+
+  if (!imageSrc) {
+    return <div>Image asset not found for slug: {imageData.slug}</div>;
+  }
+
+  if (!imageData || !session) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -78,7 +86,7 @@ export default function ImagePage() {
 
       <div style={{ position: "relative", display: "inline-block" }}>
         <img
-          src={localImageMap[imageData.slug]}
+          src={imageSrc}
           alt={imageData.title}
           onClick={gameComplete ? undefined : handleImageClick}
           style={{
@@ -107,7 +115,7 @@ export default function ImagePage() {
       {feedback && <p style={{ fontWeight: "bold" }}>{feedback}</p>}
 
       <div>
-        <h2>Character to find</h2>
+        <h2>Goal:</h2>
         <p>Find Waldo in the image.</p>
       </div>
     </div>

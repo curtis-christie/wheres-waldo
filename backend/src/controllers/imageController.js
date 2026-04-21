@@ -1,55 +1,67 @@
 import prisma from "../lib/prisma.js";
 
-export async function getImageBySlug(req, res) {
-  const { slug } = req.params;
+import prisma from "../lib/prisma.js";
 
-  const image = await prisma.image.findUnique({
-    where: { slug },
-    include: {
-      characters: {
-        select: {
-          id: true,
-          name: true,
+export async function getImageBySlug(req, res) {
+  try {
+    const { slug } = req.params;
+
+    const image = await prisma.image.findUnique({
+      where: { slug },
+      include: {
+        characters: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!image) {
-    return res.status(404).json({ message: "Image not found" });
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    res.json(image);
+  } catch (error) {
+    console.error("[getImageBySlug error]", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  res.json(image);
 }
 
 export async function getLeaderboardBySlug(req, res) {
-  const { slug } = req.params;
+  try {
+    const { slug } = req.params;
 
-  const image = await prisma.image.findUnique({
-    where: { slug },
-  });
+    const image = await prisma.image.findUnique({
+      where: { slug },
+    });
 
-  if (!image) {
-    return res.status(404).json({ message: "Image not found" });
-  }
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
 
-  const leaderboard = await prisma.gameSession.findMany({
-    where: {
-      imageId: image.id,
-      completed: true,
-      playerName: {
-        not: null,
+    const leaderboard = await prisma.gameSession.findMany({
+      where: {
+        imageId: image.id,
+        completed: true,
+        playerName: {
+          not: null,
+        },
       },
-    },
-    orderBy: {
-      finalTimeMs: "asc",
-    },
-    take: 10,
-    select: {
-      playerName: true,
-      finalTimeMs: true,
-    },
-  });
+      orderBy: {
+        finalTimeMs: "asc",
+      },
+      take: 10,
+      select: {
+        playerName: true,
+        finalTimeMs: true,
+      },
+    });
 
-  res.json(leaderboard);
+    res.json(leaderboard);
+  } catch (error) {
+    console.error("[getLeaderboardBySlug error]", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 }
