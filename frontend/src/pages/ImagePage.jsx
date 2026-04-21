@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
@@ -19,17 +18,24 @@ export default function ImagePage() {
   const [session, setSession] = useState(null);
   const [feedback, setFeedback] = useState("");
   const [marker, setMarker] = useState(null);
+  const [gameComplete, setGameComplete] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadGame() {
-      const image = await fetchImage(imageId);
-      setImageData(image);
+      try {
+        const image = await fetchImage(imageId);
+        setImageData(image);
 
-      const newSession = await createSession(image.id);
-      setSession(newSession);
+        const newSession = await createSession(image.id);
+        setSession(newSession);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load the game.");
+      }
     }
 
-    loadGame().catch(console.error);
+    loadGame();
   }, [imageId]);
 
   async function handleImageClick(event) {
@@ -47,6 +53,7 @@ export default function ImagePage() {
       if (data.correct) {
         setFeedback(`You found Waldo in ${data.finalTimeMs} ms!`);
         setMarker(data.marker);
+        setGameComplete(true);
       } else {
         setFeedback(data.message);
       }
@@ -60,6 +67,10 @@ export default function ImagePage() {
     return <div>Loading...</div>;
   }
 
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   return (
     <div className="flex items-center justify-center flex-col gap-4">
       <Navbar />
@@ -69,8 +80,12 @@ export default function ImagePage() {
         <img
           src={localImageMap[imageData.slug]}
           alt={imageData.title}
-          onClick={handleImageClick}
-          style={{ width: "800px", cursor: "crosshair", display: "block" }}
+          onClick={gameComplete ? undefined : handleImageClick}
+          style={{
+            width: "800px",
+            cursor: gameComplete ? "default" : "crosshair",
+            display: "block",
+          }}
         />
 
         {marker && (
@@ -89,9 +104,10 @@ export default function ImagePage() {
           />
         )}
       </div>
+      {feedback && <p style={{ fontWeight: "bold" }}>{feedback}</p>}
 
       <div>
-        <h2>Characters to find</h2>
+        <h2>Character to find</h2>
         <p>Find Waldo in the image.</p>
       </div>
     </div>

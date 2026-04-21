@@ -31,3 +31,16 @@ export async function submitGuess(payload) {
   if (!res.ok) throw new Error("Failed to submit guess");
   return res.json();
 }
+
+export async function completeSession(sessionId, playerName) {
+  const res = await fetch(`${API_BASE}/sessions/${sessionId}/complete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ playerName }),
+  });
+
+  if (!res.ok) throw new Error("Failed to save player name");
+  return res.json();
+}
