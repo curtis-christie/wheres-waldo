@@ -1,21 +1,24 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar.jsx";
 import waldoImg1 from "../assets/waldo1.jpg";
-import waldoImg2 from "../assets/waldo2.jpg";
-import waldoImg3 from "../assets/waldo3.jpg";
-import { fetchImage, createSession } from "../services/api.js";
+// import waldoImg2 from "../assets/waldo2.jpg";
+// import waldoImg3 from "../assets/waldo3.jpg";
+import { fetchImage, createSession, submitGuess } from "../services/api.js";
 
 const localImageMap = {
   waldo1: waldoImg1,
-  waldo2: waldoImg2,
-  waldo3: waldoImg3,
+  // waldo2: waldoImg2,
+  // waldo3: waldoImg3,
 };
 
 export default function ImagePage() {
   const { imageId } = useParams();
   const [imageData, setImageData] = useState(null);
   const [session, setSession] = useState(null);
+  const [feedback, setFeedback] = useState("");
+  const [marker, setMarker] = useState(null);
 
   useEffect(() => {
     async function loadGame() {
@@ -34,20 +37,23 @@ export default function ImagePage() {
     const x = (event.clientX - rect.left) / rect.width;
     const y = (event.clientY - rect.top) / rect.height;
 
-    const response = await fetch("http://localhost:3000/api/guesses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      const data = await submitGuess({
         sessionId: session.id,
         x,
         y,
-      }),
-    });
+      });
 
-    const data = await response.json();
-    console.log(data);
+      if (data.correct) {
+        setFeedback(`You found Waldo in ${data.finalTimeMs} ms!`);
+        setMarker(data.marker);
+      } else {
+        setFeedback(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      setFeedback("Something went wrong while checking your guess.");
+    }
   }
 
   if (!imageData || !session) {
@@ -59,20 +65,34 @@ export default function ImagePage() {
       <Navbar />
       <h1 className="text-center">{imageData.title}</h1>
 
-      <img
-        src={localImageMap[imageData.slug]}
-        alt={imageData.title}
-        onClick={handleImageClick}
-        style={{ width: "800px", cursor: "crosshair" }}
-      />
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <img
+          src={localImageMap[imageData.slug]}
+          alt={imageData.title}
+          onClick={handleImageClick}
+          style={{ width: "800px", cursor: "crosshair", display: "block" }}
+        />
+
+        {marker && (
+          <div
+            style={{
+              position: "absolute",
+              left: `${marker.x * 100}%`,
+              top: `${marker.y * 100}%`,
+              transform: "translate(-50%, -50%)",
+              width: "24px",
+              height: "24px",
+              border: "3px solid red",
+              borderRadius: "50%",
+              pointerEvents: "none",
+            }}
+          />
+        )}
+      </div>
 
       <div>
         <h2>Characters to find</h2>
-        <ul>
-          {imageData.characters.map((character) => (
-            <li key={character.id}>{character.name}</li>
-          ))}
-        </ul>
+        <p>Find Waldo in the image.</p>
       </div>
     </div>
   );

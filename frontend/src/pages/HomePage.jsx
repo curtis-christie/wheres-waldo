@@ -1,9 +1,9 @@
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 
 const images = [
   { id: "waldo1", name: "Find Waldo 1" },
-  { id: "waldo2", name: "Find Waldo 2" },
-  { id: "waldo3", name: "Find Waldo 3" },
+  // { id: "waldo2", name: "Find Waldo 2" },
+  // { id: "waldo3", name: "Find Waldo 3" },
 ];
 
 export default function HomePage() {

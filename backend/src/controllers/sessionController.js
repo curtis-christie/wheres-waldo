@@ -1,24 +1,37 @@
 import prisma from "../lib/prisma.js";
 
 export async function createSession(req, res) {
-  const { imageId } = req.body;
+  try {
+    const { imageId } = req.body;
 
-  if (!imageId) {
-    return res.status(400).json({ message: "imageId is required" });
+    if (!imageId) {
+      return res.status(400).json({ message: "imageId is required" });
+    }
+
+    const image = await prisma.image.findUnique({
+      where: { id: Number(imageId) },
+    });
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    const session = await prisma.gameSession.create({
+      data: {
+        imageId: image.id,
+      },
+      select: {
+        id: true,
+        startedAt: true,
+        imageId: true,
+      },
+    });
+
+    res.status(201).json(session);
+  } catch (error) {
+    console.error("[createSession error]", error);
+    res.status(500).json({ message: "Internal server error" });
   }
-
-  const session = await prisma.gameSession.create({
-    data: {
-      imageId: Number(imageId),
-    },
-    select: {
-      id: true,
-      startedAt: true,
-      imageId: true,
-    },
-  });
-
-  res.status(201).json(session);
 }
 
 export async function completeSession(req, res) {
