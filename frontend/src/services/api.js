@@ -44,3 +44,9 @@ export async function completeSession(sessionId, playerName) {
   if (!res.ok) throw new Error("Failed to save player name");
   return res.json();
 }
+
+export async function fetchLeaderboard(slug) {
+  const res = await fetch(`${API_BASE}/images/${slug}/leaderboard`);
+  if (!res.ok) throw new Error("Failed to load leaderboard");
+  return res.json();
+}

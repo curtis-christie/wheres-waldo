@@ -1,7 +1,5 @@
 import prisma from "../lib/prisma.js";
 
-import prisma from "../lib/prisma.js";
-
 export async function getImageBySlug(req, res) {
   try {
     const { slug } = req.params;
